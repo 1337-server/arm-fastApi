@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from Routes import Jobs, Logs, Settings, Auth
 from Routes.Auth import get_current_active_user
+from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 
 tags_metadata = [
@@ -11,11 +12,23 @@ tags_metadata = [
 ]
 app = FastAPI(openapi_tags=tags_metadata)
 
-app.include_router(Jobs.router,tags=["Job Methods"], dependencies=[Depends(get_current_active_user)])
-app.include_router(Logs.router, tags=['Log Methods'], dependencies=[Depends(get_current_active_user)])
-app.include_router(Settings.router,tags=["Settings Methods"], dependencies=[Depends(get_current_active_user)])
+# Not safe - testing only
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+#app.include_router(Jobs.router,tags=["Job Methods"], dependencies=[Depends(get_current_active_user)])
+#app.include_router(Logs.router, tags=['Log Methods'], dependencies=[Depends(get_current_active_user)])
+#app.include_router(Settings.router,tags=["Settings Methods"], dependencies=[Depends(get_current_active_user)])
+#app.include_router(Auth.router,tags=["Auth Methods"])
+# Not safe - testing only
+app.include_router(Jobs.router,tags=["Job Methods"])
+app.include_router(Logs.router, tags=['Log Methods'])
+app.include_router(Settings.router,tags=["Settings Methods"])
 app.include_router(Auth.router,tags=["Auth Methods"])
-
 # Create db tables if needed
 @app.on_event("startup")
 async def on_startup():

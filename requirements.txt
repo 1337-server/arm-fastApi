@@ -1,33 +1,11 @@
-#Manual install req
+# Manual install req
 uvicorn==0.23.1
 fastapi==0.100.0
 fastapi-utils==0.2.1
-mysqlclient==2.2.0
 passlib==1.7.4
+mysqlclient
 prettytable==3.8.0
 psutil==5.9.5
 requests==2.31.0
 python-jose==3.3.0
 python-multipart==0.0.6
-
-
-anyio==3.7.1
-certifi==2023.7.22
-charset-normalizer==3.2.0
-click==8.1.6
-ecdsa==0.18.0
-exceptiongroup==1.1.2
-greenlet==2.0.2
-h11==0.14.0
-idna==3.4
-pyasn1==0.5.0
-pydantic==1.10.12
-python-multipart==0.0.6
-rsa==4.9
-six==1.16.0
-sniffio==1.3.0
-SQLAlchemy==1.4.49
-starlette==0.27.0
-typing_extensions==4.7.1
-urllib3==2.0.4
-wcwidth==0.2.6
