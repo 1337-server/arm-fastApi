@@ -24,6 +24,7 @@ class Jobs:
 
     def list_active_jobs(self, limit: int = 10, offset: int = 0):
         try:
+            print("/jobs - list active jobs")
             search_results = get_jobs_by_status(self.session, "active")
             json_compatible_item_data = jsonable_encoder(search_results)
             return JSONResponse(content=json_compatible_item_data)
@@ -106,13 +107,16 @@ async def search_the_db_for_jobs(query: str, session: Session = Depends(get_db))
         raise HTTPException(**cie.__dict__)
 
 
-@router.get("/database/{:mode}")
+@router.get("/database")
 async def get_jobs_by_mode(session: Session = Depends(get_db), mode: str = "database", limit: int = 10, offset: int = 0):
     try:
-        if mode == "database":
+        print("database/mode")
+        if mode is None or mode == "database" or mode == "":
+            print("database/None or unset")
             search_results = get_all_jobs(session, limit, offset)
             json_compatible_item_data = jsonable_encoder({"limit": limit, "offset": offset, "data": search_results})
         else:
+            print("database/job by status")
             search_results = get_jobs_by_status(session, mode)
             json_compatible_item_data = jsonable_encoder(search_results)
         return JSONResponse(content=json_compatible_item_data)

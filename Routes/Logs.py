@@ -2,7 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from sqlalchemy.orm import Session
-
+from fastapi.encoders import jsonable_encoder
+from starlette.responses import JSONResponse
 from crud import get_all_logs, delete_log
 from database import get_db
 from schemas import PaginatedJobList
@@ -20,8 +21,8 @@ class Logs:
 
         log_list = get_all_logs()
         response = {"limit": limit, "offset": offset, "data": log_list}
-
-        return response
+        json_compatible_item_data = jsonable_encoder(response)
+        return JSONResponse(content=json_compatible_item_data)
 
 @router.get("/logs/full/{logfile}/{job_id}")
 async def get_log(logfile: str, job_id: int):
