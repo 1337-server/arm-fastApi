@@ -3,7 +3,7 @@ import re
 from typing import List
 
 import psutil
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from exceptions import JobAlreadyExistError, JobNotFoundError, UISettingsNotFoundError
 from models import Job, Notifications, UISettings
@@ -20,10 +20,8 @@ def get_all_jobs(session: Session, limit: int, offset: int) -> List[Job]:
 # Function to  get info of a particular job
 def get_job_info_by_id(session: Session, _id: int) -> Job:
     job_info = session.query(Job).get(_id)
-
     if job_info is None:
         raise JobNotFoundError
-
     return job_info
 
 
@@ -158,37 +156,15 @@ def search(session: Session, search_query: str):
     return {'success': True, 'mode': 'search', 'results': search_results}
 
 
-def get_jobs_by_status(session: Session, job_status: str) -> dict:
-    success = False
+def get_jobs_by_status(session: Session, job_status: str)-> List[Job]:
     if job_status in ("success", "fail"):
-        jobs = session.query(Job).filter_by(status=job_status)
+        jobs = session.query(Job).filter_by(status=job_status).all()
     else:
-        # Get running jobs
         print("Get running jobs")
         jobs = session.query(Job).filter(Job.status.notin_(['fail', 'success'])).all()
-
-    job_results = {}
-    i = 0
-    for j in jobs:
-        job_results[i] = {}
-        # TODO Need to fix import from cfg so we can process logs
-        # job_log = "" #os.path.join(cfg.arm_config['LOGPATH'], str(j.logfile))
-        # process_logfile(job_log, j, job_results[i])
-        try:
-            job_results[i]['config'] = j.config.get_d()
-        except AttributeError:
-            job_results[i]['config'] = "config not found"
-            print("couldn't get config")
-
-        for key, value in j.get_d().items():
-            if key != "config":
-                job_results[i][str(key)] = str(value)
-        i += 1
-    print(job_results)
     if jobs:
-        print("jobs  - we have " + str(len(job_results)) + " jobs")
-        success = True
-    return {"success": success, "mode": job_status, "results": job_results}
+        print("jobs  - we have jobs", jobs)
+    return jobs
 
 
 ################################ logs #####################################################

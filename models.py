@@ -69,8 +69,8 @@ class Job(Base):
     updated = Column(Boolean)
     pid = Column(BigInteger)
     pid_hash = Column(BigInteger)
-    tracks = relationship('Track', backref='job', lazy='dynamic')
-    config = relationship('Config', uselist=False, backref="job")
+    tracks = relationship('Track', backref='job', uselist=True)
+    config = relationship('Config', backref="job", uselist=False)
 
     def __init__(self, devpath, *args: Any, **kwargs: Any):
         """Return a disc object"""

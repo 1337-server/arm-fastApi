@@ -45,9 +45,7 @@ class Jobs:
 @router.get("/jobs/{job_id}", response_model=JobSchemas)
 def get_job_info(job_id: int, session: Session = Depends(get_db)):
     try:
-        job_info = get_job_info_by_id(session, job_id)
-        json_compatible_item_data = jsonable_encoder(job_info)
-        return JSONResponse(content=json_compatible_item_data)
+        return get_job_info_by_id(session, job_id)
     except JobException as cie:
         raise HTTPException(**cie.__dict__)
 
@@ -56,9 +54,7 @@ def get_job_info(job_id: int, session: Session = Depends(get_db)):
 @router.put("/jobs/{job_id}", response_model=JobSchemas)
 def update_job(job_id: int, new_info: CreateAndUpdateJob, session: Session = Depends(get_db)):
     try:
-        job_info = update_job_info(session, job_id, new_info)
-        json_compatible_item_data = jsonable_encoder(job_info)
-        return JSONResponse(content=json_compatible_item_data)
+        return update_job_info(session, job_id, new_info)
     except JobException as cie:
         raise HTTPException(**cie.__dict__)
 
@@ -107,18 +103,16 @@ async def search_the_db_for_jobs(query: str, session: Session = Depends(get_db))
         raise HTTPException(**cie.__dict__)
 
 
-@router.get("/database")
+@router.get("/database", response_model=PaginatedJobList)
 async def get_jobs_by_mode(session: Session = Depends(get_db), mode: str = "database", limit: int = 10, offset: int = 0):
     try:
-        print("database/mode")
         if mode is None or mode == "database" or mode == "":
             print("database/None or unset")
             search_results = get_all_jobs(session, limit, offset)
-            json_compatible_item_data = jsonable_encoder({"limit": limit, "offset": offset, "data": search_results})
         else:
             print("database/job by status")
             search_results = get_jobs_by_status(session, mode)
-            json_compatible_item_data = jsonable_encoder(search_results)
-        return JSONResponse(content=json_compatible_item_data)
+
+        return {"limit": limit, "offset": offset, "results": search_results }
     except JobException as cie:
         raise HTTPException(**cie.__dict__)

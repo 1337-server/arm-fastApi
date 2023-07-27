@@ -1,4 +1,10 @@
 from fastapi import FastAPI, Depends
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import ResponseValidationError
+from starlette import status
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
 from Routes import Jobs, Logs, Settings, Auth
 from Routes.Auth import get_current_active_user
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +17,12 @@ tags_metadata = [
     {"name": "Auth Methods", "description": "Authorize sections"},
 ]
 app = FastAPI(openapi_tags=tags_metadata)
-
+@app.exception_handler(ResponseValidationError)
+async def validation_exception_handler(request: Request, exc: ResponseValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({"detail": exc.errors()}),
+    )
 # Not safe - testing only
 app.add_middleware(
     CORSMiddleware,
