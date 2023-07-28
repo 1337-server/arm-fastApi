@@ -5,11 +5,14 @@ from fastapi_utils.cbv import cbv
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
+from utils.ServerUtil import ServerUtil
 from crud import get_all_jobs, create_job, get_job_info_by_id, update_job_info, delete_job_info, abandon_job_crud, \
     send_job_to_remote_api, search, get_jobs_by_status
 from database import get_db
 from exceptions import JobException
+from models import SystemInfo
 from schemas import JobSchemas, CreateAndUpdateJob, PaginatedJobList
+#from utils import check_hw_transcode_support
 
 router = APIRouter()
 
@@ -20,23 +23,26 @@ class Jobs:
     session: Session = Depends(get_db)
 
     # API to get the list of jobs currently running
-    @router.get("/jobs", response_model=PaginatedJobList)
+    @router.get("/jobs")
 
-    def list_active_jobs(self, limit: int = 10, offset: int = 0):
+    def list_active_jobs(self):
         try:
             print("/jobs - list active jobs")
-            search_results = get_jobs_by_status(self.session, "active")
-            json_compatible_item_data = jsonable_encoder(search_results)
-            return JSONResponse(content=json_compatible_item_data)
+            server = self.session.query(SystemInfo).filter_by(id="1").first()
+            serverutil = ServerUtil()
+            return {
+                    "results": get_jobs_by_status(self.session, "active"),
+                    'server': server.get_d(), 'serverutil': serverutil.__dict__,
+                    #'hwsupport': check_hw_transcode_support()
+            }
         except JobException as cie:
             raise HTTPException(**cie.__dict__)
 
     # API endpoint to add a job info to the database
-    @router.post("/jobs")
+    @router.post("/jobs", response_model=JobSchemas)
     def add_job(self, job_info: CreateAndUpdateJob):
         try:
-            job = create_job(self.session, job_info)
-            return job
+            return create_job(self.session, job_info)
         except JobException as cie:
             raise HTTPException(**cie.__dict__)
 

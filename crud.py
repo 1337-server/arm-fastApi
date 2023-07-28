@@ -1,15 +1,22 @@
 import os
+import platform
+import random
 import re
 from typing import List
 
 import psutil
-from sqlalchemy.orm import Session, joinedload
+import yaml
+from sqlalchemy.orm import Session
 
+#from Routes.utils.utils import check_hw_transcode_support
 from exceptions import JobAlreadyExistError, JobNotFoundError, UISettingsNotFoundError
-from models import Job, Notifications, UISettings
+from models import Job, Notifications, UISettings, RipperConfig
 from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings
 import requests
 import json
+
+from utils.git import get_git_revision_hash, git_check_updates
+from utils.utils import check_hw_transcode_support
 
 
 # Function to get list of jobs
@@ -151,7 +158,7 @@ def search(session: Session, search_query: str):
         for key, value in iter(jobs.get_d().items()):
             if key != "config":
                 search_results[i][str(key)] = str(value)
-            # app.logger.debug(str(key) + "= " + str(value))
+            # print(str(key) + "= " + str(value))
         i += 1
     return {'success': True, 'mode': 'search', 'results': search_results}
 
@@ -178,14 +185,39 @@ def delete_log(logfile):
 
 
 ################################# Settings ################################################
-def get_ripper_settings():
-    # TODO Read from file
-    return None
+def get_ripper_settings(session) -> RipperConfig:
+    ripper_settings = session.query(RipperConfig).first()
+    print(ripper_settings)
+    # If not ripper settings create and insert default values
+    if not ripper_settings:
+        import requests
+        import urllib
+        # NOT SAFE DO NOT LINK REMOTE!
+        link = 'https://raw.githubusercontent.com/automatic-ripping-machine/automatic-ripping-machine/main/setup/arm.yaml'
+        f = urllib.request.urlopen(link)
+        config = yaml.safe_load(f.read())
+        print(config)
+        ripper_settings = RipperConfig()
+        for (key, value) in config.items():
+            setattr(ripper_settings, key, value)
+            print(f"Setting {key}: {value}")
+
+        print("successfully written to the database")
+
+        session.add(ripper_settings)
+        session.commit()
+    print(ripper_settings)
+    return ripper_settings
 
 
-def update_ripper_settings():
-    # TODO Read from file
-    return None
+def update_ripper_settings(session, new_settings):
+    ripper_settings = session.query(RipperConfig).get(0)
+    print(new_settings)
+    for key, value in new_settings:
+        print(f"setting {key} = {value}")
+        setattr(ripper_settings, key, value)
+    session.commit()
+    return ripper_settings
 
 
 def get_ui_settings(session: Session) -> UISettings:
@@ -204,16 +236,20 @@ def get_ui_settings(session: Session) -> UISettings:
     return session.query(UISettings).first()
 
 
-def update_ui_settings(session: Session, info_update: CreateAndUpdateUISettings) -> UISettings:
+def update_ui_settings(session: Session, info_update, config_id:int  = 1):
     """
     Update/create the ui settings if needed
+    :param config_id:
     :param session:
     :param info_update:
     :return:
     """
-    ui_settings = session.query(UISettings).first()
+    ui_settings = session.query(UISettings).get(config_id)
+
+    print(ui_settings)
     # If none found in ui settings create and add it to db
     if ui_settings is None:
+        print("No ui settings found, creating....")
         ui_settings = UISettings(**info_update.dict())
         session.add(ui_settings)
     ui_settings.use_icons = info_update.use_icons
@@ -248,3 +284,75 @@ def get_apprise_settings(session: Session) -> UISettings:
     """
     # TODO Read from file
     return session.query(UISettings).first()
+
+
+def enable_dev_mode(mode, session):
+    jobs = session.query(Job).order_by(session.desc(Job.job_id)).order_by(Job.job_id.desc())
+    print("Jobs number = " + str(jobs.count()))
+    r1 = random.randrange(0, jobs.count())
+    r2 = random.randrange(0, jobs.count())
+    r3 = random.randrange(0, jobs.count())
+    r4 = random.randrange(0, jobs.count())
+    for j in jobs:
+        if j.job_id == r1:
+            j.status = 'active'
+        if j.job_id == r2:
+            j.status = 'ripping'
+        if j.job_id == r3:
+            j.status = 'transcoding'
+        if j.job_id == r4:
+            j.status = 'waiting'
+        print(j.job_id)
+        session.commit()
+    return {'jobs': str(jobs), 'Mode': mode, 'count': jobs.count(), 'job_ids': [r1,r2,r3,r4]}
+
+def get_notifications():
+    """Get all current notifications"""
+    all_notification = Notifications.query.filter_by(seen=False)
+    notification = [a.get_d() for a in all_notification]
+    return notification
+
+
+def get_stats(session):
+    # stats for info page
+    try:
+        with open(os.path.join('/opt/arm', 'VERSION')) as version_file:
+            version = version_file.read().strip()
+    except FileNotFoundError:
+        version = "Unknown"
+    failed_rips = session.query(Job).filter_by(status="fail").count()
+    total_rips = session.query(Job).filter_by().count()
+    movies = session.query(Job).filter_by(video_type="movie").count()
+    series = session.query(Job).filter_by(video_type="series").count()
+    cds = session.query(Job).filter_by(disctype="music").count()
+    stats = {'python_version': platform.python_version(),
+             'arm_version': version,
+             #'git_commit': get_git_revision_hash(),
+             'movies_ripped': movies,
+             'series_ripped': series,
+             'cds_ripped': cds,
+             'no_failed_jobs': failed_rips,
+             'total_rips': total_rips,
+             #'updated': git_check_updates(get_git_revision_hash()),
+             'hw_support': check_hw_transcode_support(),
+             }
+    # form_drive = SystemInfoDrives(request.form)
+    # System Drives (CD/DVD/Blueray drives)
+    json_drives = {} # check_for_drives()
+    return {'success': True, 'stats': stats, 'drives': json_drives}
+
+
+def check_for_drives():
+    from utils.DriveUtils import drives_check_status
+    drives = drives_check_status()
+    json_drives = {}
+    i=0
+    for drive in drives:
+        json_drives[i] = {}
+        for key, value in drive.get_d().items():
+            json_drives[i][str(key)] = str(value)
+            # Will trigger error if no previous
+            json_drives[i]['job_previous'] = drive.job_previous.get_d()
+
+        i += 1
+    return json_drives

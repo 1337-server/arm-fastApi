@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
 from crud import create_job, get_ripper_settings, update_ui_settings, get_ui_settings, get_apprise_settings, \
-    get_abcde_settings
+    get_abcde_settings, get_stats, update_ripper_settings
 from database import get_db
 from exceptions import JobException
-from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings, UISettingsSchemas
+from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings, UISettingsSchemas, CreateAndUpdateConfig, \
+    CreateAndUpdateRipper
 
 router = APIRouter()
 
@@ -21,21 +22,21 @@ class Settings:
     # API to get stats of the server
     @router.get("/settings/stats")
     def get_stats_for_server(self):
-        response = {"data": "ripper_settings"}
+        response = get_stats(self.session)
         return response
 
     # Get ripper settings
     @router.get("/settings/ripper")
     def get_ripper_settings(self):
-        response = {"data": get_ripper_settings()}
+        response = {"data": get_ripper_settings(self.session)}
         return response
 
     # Save ripper settings
     @router.put("/settings/ripper")
-    def save_ripper_settings(self, jobs_list: CreateAndUpdateJob):
+    def save_ripper_settings(self, new_info: CreateAndUpdateRipper):
         try:
-            jobs_list = create_job(self.session, jobs_list)
-            return jobs_list
+            ripper_settings = update_ripper_settings(self.session, new_info)
+            return ripper_settings
         except JobException as cie:
             raise HTTPException(**cie.__dict__)
 
@@ -62,15 +63,13 @@ class Settings:
     # Get ui config
     @router.get("/settings/get_ui_conf")
     def get_ui_conf(self):
-        return get_ui_settings(self.session)
+        return {'cfg': get_ui_settings(self.session), 'comments': ''}
 
 
 # Save ui config
-@router.put("/settings/get_ui_conf", response_model=UISettingsSchemas)
-def save_ui_conf( new_info: CreateAndUpdateUISettings, session: Session = Depends(get_db)):
+@router.put("/settings/get_ui_conf")
+async def save_ui_conf(new_info: CreateAndUpdateUISettings, session: Session = Depends(get_db)):
     try:
-        ui_config = update_ui_settings(session, new_info)
-        json_compatible_item_data = jsonable_encoder(ui_config)
-        return JSONResponse(content=json_compatible_item_data)
+        return update_ui_settings(session, new_info)
     except JobException as cie:
         raise HTTPException(**cie.__dict__)
