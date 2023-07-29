@@ -10,13 +10,12 @@ import yaml
 from sqlalchemy.orm import Session
 
 #from Routes.utils.utils import check_hw_transcode_support
-from exceptions import JobAlreadyExistError, JobNotFoundError, UISettingsNotFoundError
+from exceptions import JobAlreadyExistError, JobNotFoundError
 from models import Job, Notifications, UISettings, RipperConfig, AppriseConfig
-from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings
+from schemas import CreateAndUpdateJob
 import requests
 import json
 
-from utils.git import get_git_revision_hash, git_check_updates
 from utils.utils import check_hw_transcode_support
 
 
@@ -340,6 +339,10 @@ def crud_get_notifications(session):
     all_notification = session.query(Notifications).filter_by(seen=False)
     notification = [a.get_d() for a in all_notification]
     return notification
+
+def crud_get_all_notifications(session):
+    """Get all current notifications"""
+    return session.query(Notifications).order_by(Notifications.id.desc()).all()
 
 def crud_read_notification(session, notify_id):
     """Read notification, disable it from being show"""

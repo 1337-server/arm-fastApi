@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from crud import crud_get_notifications, crud_read_notification
+from crud import crud_get_notifications, crud_read_notification, crud_get_all_notifications
 from database import get_db
 from models import RipperConfig, Notifications, Job
 from utils.utils import search_remote
@@ -21,6 +21,10 @@ async def notify_timeout(notify_timeout: str,):
 @router.get("/get_notifications")
 async def get_notifications(session: Session = Depends(get_db)):
     return crud_get_notifications(session)
+
+@router.get("/get_all_notifications")
+async def get_all_notifications(session: Session = Depends(get_db)):
+    return crud_get_all_notifications(session)
 
 @router.get("/search_remote/{title}/{year}/{job_id}")
 async def search_remote_for_metadata(job_id: str, title: str, year: str = None, session: Session = Depends(get_db)):
