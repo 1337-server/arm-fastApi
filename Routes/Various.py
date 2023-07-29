@@ -54,3 +54,25 @@ def update_title(job_id: int, session: Session = Depends(get_db), title: str = "
     session.commit()
     return {'title': job.title, 'year': job.year, 'success': True,
             'job id': job.job_id,'imdb_id':job.imdb_id}
+
+@router.get("/change_params/{job_id}")
+def change_job_params(job_id, session: Session = Depends(get_db),
+                      DISCTYPE: str = "dvd", MINLENGTH: int = 600,
+                      MAXLENGTH: int = 99999, RIPMETHOD:str = "mkv",
+                      MAINFEATURE: bool = False):
+    """Update parameters for job    """
+    job = session.query(Job).get(job_id)
+    config = job.config
+    job.disctype = DISCTYPE
+    config.MINLENGTH = MINLENGTH
+    config.MAXLENGTH = MAXLENGTH
+    config.RIPMETHOD = RIPMETHOD
+    # must be 1 for True 0 for False
+    config.MAINFEATURE = 1 if MAINFEATURE else 0
+    message = f'Parameters changed. Rip Method={config.RIPMETHOD},Main Feature={config.MAINFEATURE},' \
+              f'Minimum Length={config.MINLENGTH}, Maximum Length={config.MAXLENGTH}, Disctype={job.disctype}'
+    # We don't need to set the config as they are set with job commit
+    notification = Notifications(title=f"Job: {job.job_id} Config updated!", message=message)
+    session.add(notification)
+    session.commit()
+    return {'message': message, 'form': 'change_job_params', "success": True}

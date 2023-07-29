@@ -265,31 +265,6 @@ def generate_log(logpath, mode, logfile, job_id, session):
             'escaped': True, 'job_title': title_year}
 
 
-def change_job_params(config_id, session):
-    """Update values for job    """
-    job = Job.query.get(config_id)
-    config = job.config
-    form = ""
-    print("Before valid")
-    if job.config and job:
-        print("Valid")
-        job.disctype = format(form.DISCTYPE.data)
-        config.MINLENGTH = format(form.MINLENGTH.data)
-        config.MAXLENGTH = format(form.MAXLENGTH.data)
-        config.RIPMETHOD = format(form.RIPMETHOD.data)
-        # must be 1 for True 0 for False
-        config.MAINFEATURE = 1 if format(form.MAINFEATURE.data).lower() == "true" else 0
-        args = {'disctype': job.disctype}
-        message = f'Parameters changed. Rip Method={config.RIPMETHOD}, Main Feature={config.MAINFEATURE},' \
-                  f'Minimum Length={config.MINLENGTH}, Maximum Length={config.MAXLENGTH}, Disctype={job.disctype}'
-        # We don't need to set the config as they are set with job commit
-        notification = Notifications(title=f"Job: {job.job_id} Config updated!", message=message)
-        session.add(notification)
-        session.commit()
-        return {'message': message, 'form': 'change_job_params', "success": True}
-    return {'return': '', 'success': False}
-
-
 def get_notify_timeout():
     """Return the notification timeout UI setting"""
 
