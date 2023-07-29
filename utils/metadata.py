@@ -3,12 +3,17 @@ import urllib
 import json
 import re
 import requests
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from models import RipperConfig
 
 TMDB_YEAR_REGEX = r"-\d{0,2}-\d{0,2}"
-OMDB_API_KEY = ""
-TMDB_API_KEY = ""
-METADATA_PROVIDER = ""
-def call_omdb_api(title=None, year=None, imdb_id=None, plot="short"):
+OMDB_API_KEY = "OMDB_API_KEY"
+TMDB_API_KEY = "TMDB_API_KEY"
+METADATA_PROVIDER = "METADATA_PROVIDER"
+
+def call_omdb_api(cfg, title=None, year=None, imdb_id=None, plot="short"):
     """
     Queries OMDbapi.org for title information and parses if it's a movie
         or a tv series
@@ -18,7 +23,8 @@ def call_omdb_api(title=None, year=None, imdb_id=None, plot="short"):
     :param plot: if plot should be short/full. Defaults "short"
     :return: dict of
     """
-    omdb_api_key = OMDB_API_KEY
+    print(cfg.OMDB_API_KEY)
+    omdb_api_key = cfg.OMDB_API_KEY
     title_info = None
     # Default url
     str_url = f"https://www.omdbapi.com/?s={title}&plot={plot}&r=json&apikey={omdb_api_key}"
@@ -91,14 +97,14 @@ def get_omdb_poster(title=None, year=None, imdb_id=None, plot="short"):
     return None, None
 
 
-def get_tmdb_poster(search_query=None, year=None):
+def get_tmdb_poster(search_query=None, year=None, cfg=None):
     """
     Queries api.themoviedb.org for the poster and backdrop for movie
     :param search_query: title of movie/show
     :param year: year of movie/show
     :return: dict of search results
     """
-    tmdb_api_key = TMDB_API_KEY
+    tmdb_api_key = cfg.TMDB_API_KEY
     search_results, poster_base, response = tmdb_fetch_results(search_query, year, tmdb_api_key)
 
     # if status_code is in search_results we know there was an error
@@ -143,14 +149,15 @@ def tmdb_process_poster(search_results, poster_base):
     return None
 
 
-def tmdb_search(search_query=None, year=None):
+def tmdb_search(search_query=None, year=None, cfg=None):
     """
     Queries api.themoviedb.org for movies close to the query
     :param search_query: title of movie or tv show
     :param year: year of release
     :return: json/dict of search results
     """
-    tmdb_api_key = TMDB_API_KEY
+    print(TMDB_API_KEY)
+    tmdb_api_key = cfg.TMDB_API_KEY
     search_results, poster_base, response = tmdb_fetch_results(search_query, year, tmdb_api_key)
     print(f"Search results - movie - {search_results}")
     if 'status_code' in search_results:
@@ -226,13 +233,14 @@ def tmdb_get_imdb(tmdb_id):
     return search_results['external_ids']['imdb_id']
 
 
-def tmdb_find(imdb_id):
+def tmdb_find(imdb_id, cfg=None):
     """
     basic function to return an object from TMDB from only the IMDB id
+    :param cfg:
     :param str imdb_id: the IMDB id to lookup
     :return: dict in the standard 'arm' format
     """
-    tmdb_api_key = TMDB_API_KEY
+    tmdb_api_key = cfg.TMDB_API_KEY
     url = f"https://api.themoviedb.org/3/find/{imdb_id}?api_key={tmdb_api_key}&external_source=imdb_id"
     poster_size = "original"
     poster_base = f"https://image.tmdb.org/t/p/{poster_size}"
@@ -300,11 +308,12 @@ def tmdb_fetch_results(search_query, year, tmdb_api_key):
     return_json = json.loads(response.text)
     return return_json, poster_base, response
 
-def metadata_selector(func, query="", year="", imdb_id=""):
+def metadata_selector(func, cfg, query="", year="", imdb_id=""):
     """
     Used to switch between OMDB or TMDB as the metadata provider
     - TMDB returned queries are converted into the OMDB format
 
+    :param cfg: The session linked to the database
     :param func: the function that is being called - allows for more dynamic results
     :param query: this can either be a search string or movie/show title
     :param year: the year of movie/show release
@@ -313,25 +322,26 @@ def metadata_selector(func, query="", year="", imdb_id=""):
     :return: json/dict object
     """
     return_function = None
-    if METADATA_PROVIDER.lower() == "tmdb":
+    print(cfg.OMDB_API_KEY, cfg.METADATA_PROVIDER)
+    if cfg.METADATA_PROVIDER.lower() == "tmdb":
         print(f"provider tmdb - function: {func}")
         if func == "search":
-            return_function = tmdb_search(str(query), str(year))
+            return_function = tmdb_search(str(query), str(year), cfg)
         elif func == "get_details":
             if query:
                 print("provider tmdb - using: get_tmdb_poster")
-                return_function = get_tmdb_poster(str(query), str(year))
+                return_function = get_tmdb_poster(str(query), str(year),cfg)
             elif imdb_id:
                 print("provider tmdb - using: tmdb_find")
-                return_function = tmdb_find(imdb_id)
+                return_function = tmdb_find(imdb_id,cfg)
             print("No title or imdb provided")
 
-    elif METADATA_PROVIDER.lower() == "omdb":
+    elif cfg.METADATA_PROVIDER.lower() == "omdb":
         print(f"provider omdb - function: {func}")
         if func == "search":
-            return_function = call_omdb_api(str(query), str(year))
+            return_function = call_omdb_api(cfg, str(query), str(year))
         elif func == "get_details":
-            return_function = call_omdb_api(title=str(query), year=str(year), imdb_id=str(imdb_id), plot="full")
+            return_function = call_omdb_api(cfg, title=str(query), year=str(year), imdb_id=str(imdb_id), plot="full")
     else:
         print("Unknown metadata selected")
     return return_function

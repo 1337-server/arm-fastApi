@@ -1,3 +1,4 @@
+import datetime
 import os
 import platform
 import random
@@ -334,12 +335,24 @@ def enable_dev_mode(mode, session):
         session.commit()
     return {'jobs': str(jobs), 'Mode': mode, 'count': jobs.count(), 'job_ids': [r1,r2,r3,r4]}
 
-def get_notifications():
+def crud_get_notifications(session):
     """Get all current notifications"""
-    all_notification = Notifications.query.filter_by(seen=False)
+    all_notification = session.query(Notifications).filter_by(seen=False)
     notification = [a.get_d() for a in all_notification]
     return notification
 
+def crud_read_notification(session, notify_id):
+    """Read notification, disable it from being show"""
+    return_json = {'success': False, 'mode': 'read_notification', 'message': ""}
+    notification = session.query(Notifications).filter_by(id=notify_id, seen=0).first()
+    if notification:
+        notification.seen = 1
+        notification.dismiss_time = datetime.datetime.now()
+        session.commit()
+        return_json['success'] = True
+    else:
+        return_json['message'] = "Notification already read or not found!"
+    return return_json
 
 def get_stats(session):
     # stats for info page

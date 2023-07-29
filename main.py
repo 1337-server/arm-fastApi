@@ -5,7 +5,8 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from Routes import Jobs, Logs, Settings, Auth
+import crud
+from Routes import Jobs, Logs, Settings, Auth, Various
 from Routes.Auth import get_current_active_user
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
@@ -15,6 +16,7 @@ tags_metadata = [
     {"name": "Settings Methods", "description": "Settings methods for viewing/saving Settings in ARM"},
     {"name": "Log Methods", "description": "Log file methods"},
     {"name": "Auth Methods", "description": "Authorize sections"},
+    {"name": "Various Methods", "description": "All other methods are stored here"},
 ]
 app = FastAPI(openapi_tags=tags_metadata)
 @app.exception_handler(ResponseValidationError)
@@ -35,11 +37,13 @@ app.add_middleware(
 #app.include_router(Logs.router, tags=['Log Methods'], dependencies=[Depends(get_current_active_user)])
 #app.include_router(Settings.router,tags=["Settings Methods"], dependencies=[Depends(get_current_active_user)])
 #app.include_router(Auth.router,tags=["Auth Methods"])
+#app.include_router(Various.router,tags=["Various Methods"], dependencies=[Depends(get_current_active_user)])
 # Not safe - testing only
 app.include_router(Jobs.router,tags=["Job Methods"])
 app.include_router(Logs.router, tags=['Log Methods'])
 app.include_router(Settings.router,tags=["Settings Methods"])
 app.include_router(Auth.router,tags=["Auth Methods"])
+app.include_router(Various.router,tags=["Various Methods"])
 # Create db tables if needed
 @app.on_event("startup")
 async def on_startup():

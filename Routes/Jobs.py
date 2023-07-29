@@ -7,7 +7,7 @@ from starlette.responses import JSONResponse
 
 from utils.ServerUtil import ServerUtil
 from crud import get_all_jobs, create_job, get_job_info_by_id, update_job_info, delete_job_info, abandon_job_crud, \
-    send_job_to_remote_api, search, get_jobs_by_status
+    send_job_to_remote_api, search, get_jobs_by_status, crud_get_notifications
 from database import get_db
 from exceptions import JobException
 from models import SystemInfo
@@ -33,6 +33,7 @@ class Jobs:
             return {
                     "results": get_jobs_by_status(self.session, "active"),
                     'server': server.get_d(), 'serverutil': serverutil.__dict__,
+                    'notes':crud_get_notifications(self.session)
                     #'hwsupport': check_hw_transcode_support()
             }
         except JobException as cie:
