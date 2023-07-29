@@ -1,4 +1,6 @@
 from datetime import datetime
+from pydoc import text
+
 from pydantic import BaseModel
 from typing import List
 from pydantic.schema import Optional, Dict
@@ -260,6 +262,108 @@ class CreateAndUpdateRipper(BaseModel):
 
 
 class RipperSchemas(CreateAndUpdateRipper):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+
+class CreateAndUpdateApprise(BaseModel):
+    BOXCAR_KEY: Optional[str]
+    BOXCAR_SECRET: Optional[str]
+    DISCORD_WEBHOOK_ID: Optional[str]
+    DISCORD_TOKEN: Optional[str]
+    FAAST_TOKEN: Optional[str]
+    FLOCK_TOKEN: Optional[str]
+    GITTER_TOKEN: Optional[str]
+    GITTER_ROOM: Optional[str]
+    GOTIFY_TOKEN: Optional[str]
+    GOTIFY_HOST: Optional[str]
+    GROWL_HOST: Optional[str]
+    GROWL_PASS: Optional[str]
+    JOIN_API: Optional[str]
+    JOIN_DEVICE: Optional[str]
+    KODI_HOST: Optional[str]
+    KODI_PORT: Optional[str]
+    KODI_USER: Optional[str]
+    KODI_PASS: Optional[str]
+    KUMULOS_API: Optional[str]
+    KUMULOS_SERVERKEY: Optional[str]
+    LAMETRIC_MODE: Optional[str]
+    LAMETRIC_API: Optional[str]
+    LAMETRIC_HOST: Optional[str]
+    LAMETRIC_APP_ID: Optional[str]
+    LAMETRIC_TOKEN: Optional[str]
+    MAILGUN_DOMAIN: Optional[str]
+    MAILGUN_USER: Optional[str]
+    MAILGUN_APIKEY: Optional[str]
+    MATRIX_HOST: Optional[str]
+    MATRIX_USER: Optional[str]
+    MATRIX_PASS: Optional[str]
+    MATRIX_TOKEN: Optional[str]
+    MSTEAMS_TOKENA: Optional[str]
+    MSTEAMS_TOKENB: Optional[str]
+    MSTEAMS_TOKENC: Optional[str]
+    NEXTCLOUD_HOST: Optional[str]
+    NEXTCLOUD_ADMINUSER: Optional[str]
+    NEXTCLOUD_ADMINPASS: Optional[str]
+    NEXTCLOUD_NOTIFY_USER: Optional[str]
+    NOTICA_TOKEN: Optional[str]
+    NOTIFICO_PROJECTID: Optional[str]
+    NOTIFICO_MESSAGEHOOK: Optional[str]
+    OFFICE365_TENANTID: Optional[str]
+    OFFICE365_ACCOUNTEMAIL: Optional[str]
+    OFFICE365_CLIENT_ID: Optional[str]
+    OFFICE365_CLIENT_SECRET: Optional[str]
+    POPCORN_API: Optional[str]
+    POPCORN_EMAIL: Optional[str]
+    POPCORN_PHONENO: Optional[str]
+    PROWL_API: Optional[str]
+    PROWL_PROVIDERKEY: Optional[str]
+    PUSHJET_HOST: Optional[str]
+    PUSHJET_SECRET: Optional[str]
+    PUSH_API: Optional[str]
+    PUSHED_APP_KEY: Optional[str]
+    PUSHED_APP_SECRET: Optional[str]
+    PUSHSAFER_KEY: Optional[str]
+    ROCKETCHAT_HOST: Optional[str]
+    ROCKETCHAT_USER: Optional[str]
+    ROCKETCHAT_PASS: Optional[str]
+    ROCKETCHAT_WEBHOOK: Optional[str]
+    RYVER_ORG: Optional[str]
+    RYVER_TOKEN: Optional[str]
+    SENDGRID_API: Optional[str]
+    SENDGRID_FROMMAIL: Optional[str]
+    SIMPLEPUSH_API: Optional[str]
+    SLACK_TOKENA: Optional[str]
+    SLACK_TOKENB: Optional[str]
+    SLACK_TOKENC: Optional[str]
+    SLACK_CHANNEL: Optional[str]
+    SPARKPOST_API: Optional[str]
+    SPARKPOST_HOST: Optional[str]
+    SPARKPOST_USER: Optional[str]
+    SPARKPOST_EMAIL: Optional[str]
+    SPONTIT_API: Optional[str]
+    SPONTIT_USER_ID: Optional[str]
+    TELEGRAM_BOT_TOKEN: Optional[str]
+    TELEGRAM_CHAT_ID: Optional[str]
+    TWIST_EMAIL: Optional[str]
+    TWIST_PASS: Optional[str]
+    XBMC_HOST: Optional[str]
+    XBMC_PORT: Optional[str]
+    XBMC_USER: Optional[str]
+    XBMC_PASS: Optional[str]
+    XMPP_HOST: Optional[str]
+    XMPP_PASS: Optional[str]
+    XMPP_USER: Optional[str]
+    WEBEX_TEAMS_TOKEN: Optional[str]
+    ZILUP_CHAT_TOKEN: Optional[str]
+    ZILUP_CHAT_BOTNAME: Optional[str]
+    ZILUP_CHAT_ORG: Optional[str]
+
+
+class AppriseSchemas(CreateAndUpdateApprise):
     id: int
 
     class Config:

@@ -673,7 +673,7 @@ class AppriseConfig(Base):
     """
     Class to hold the apprise config
     """
-    id = Column(Integer, autoincrement=False, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
     BOXCAR_KEY = Column(String(256))
     BOXCAR_SECRET = Column(String(256))
     DISCORD_WEBHOOK_ID = Column(String(256))
@@ -772,11 +772,11 @@ class AppriseConfig(Base):
         self.config_value = config_value
 
     def __repr__(self):
-        return f'<AlembicVersion: {self.version_num}>'
+        return f'<AppriseConfig: {self.__dict__}>'
 
     def __str__(self):
         """Returns a string of the object"""
-        return self.__class__.__name__ + ": " + self.version_num
+        return self.__class__.__name__ + ": " +  str(self.__dict__)
 
 class RipperConfig(Base):
     __tablename__ = "ripper_config"

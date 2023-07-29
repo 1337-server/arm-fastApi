@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 #from Routes.utils.utils import check_hw_transcode_support
 from exceptions import JobAlreadyExistError, JobNotFoundError, UISettingsNotFoundError
-from models import Job, Notifications, UISettings, RipperConfig
+from models import Job, Notifications, UISettings, RipperConfig, AppriseConfig
 from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings
 import requests
 import json
@@ -220,6 +220,14 @@ def update_ripper_settings(session, new_settings):
     return ripper_settings
 
 
+def update_apprise_settings(session, new_settings):
+    apprise_settings = session.query(AppriseConfig).get(1)
+    print(new_settings)
+    for key, value in new_settings:
+        print(f"setting {key} = {value}")
+        setattr(apprise_settings, key, value)
+    session.commit()
+    return apprise_settings
 def get_ui_settings(session: Session) -> UISettings:
     """
     Update/create the ui settings if needed
@@ -276,14 +284,34 @@ def get_abcde_settings(session: Session) -> UISettings:
     return session.query(UISettings).first()
 
 
-def get_apprise_settings(session: Session) -> UISettings:
+def get_apprise_settings(session: Session) -> AppriseConfig:
     """
     Update/create the ui settings if needed
     :param session: Current db session
     :return: The ui settings
     """
-    # TODO Read from file
-    return session.query(UISettings).first()
+    apprise_settings = session.query(AppriseConfig).first()
+    print(apprise_settings)
+    # If not ripper settings create and insert default values
+    if not apprise_settings:
+        import requests
+        import urllib
+        # NOT SAFE DO NOT LINK REMOTE!
+        link = 'https://raw.githubusercontent.com/automatic-ripping-machine/automatic-ripping-machine/main/setup/apprise.yaml'
+        f = urllib.request.urlopen(link)
+        config = yaml.safe_load(f.read())
+        print(config)
+        apprise_settings = AppriseConfig()
+        for (key, value) in config.items():
+            setattr(apprise_settings, key, value)
+            print(f"Setting {key}: {value}")
+
+        print("successfully written to the database")
+
+        session.add(apprise_settings)
+        session.commit()
+    print(apprise_settings)
+    return apprise_settings
 
 
 def enable_dev_mode(mode, session):
