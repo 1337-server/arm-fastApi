@@ -7,11 +7,13 @@ from starlette.responses import JSONResponse
 
 from utils.ServerUtil import ServerUtil
 from crud import get_all_jobs, create_job, get_job_info_by_id, update_job_info, delete_job_info, abandon_job_crud, \
-    send_job_to_remote_api, search, get_jobs_by_status, crud_get_notifications
+    send_job_to_remote_api, search, get_jobs_by_status, crud_get_notifications, get_dvd_jobs
 from database import get_db
 from exceptions import JobException
 from models import SystemInfo
 from schemas import JobSchemas, CreateAndUpdateJob, PaginatedJobList
+from utils.utils import check_hw_transcode_support
+
 #from utils import check_hw_transcode_support
 
 router = APIRouter()
@@ -33,8 +35,8 @@ class Jobs:
             return {
                     "results": get_jobs_by_status(self.session, "active"),
                     'server': server.get_d(), 'serverutil': serverutil.__dict__,
-                    'notes':crud_get_notifications(self.session)
-                    #'hwsupport': check_hw_transcode_support()
+                    'notes':crud_get_notifications(self.session),
+                    'hwsupport': check_hw_transcode_support()
             }
         except JobException as cie:
             raise HTTPException(**cie.__dict__)
@@ -94,6 +96,12 @@ async def send_to_remote_db(job_id: int, session: Session = Depends(get_db)):
     except JobException as cie:
         raise HTTPException(**cie.__dict__)
 
+@router.get("/list/dvds")
+async def get_list_of_dvds_for_remote(session: Session = Depends(get_db)):
+    try:
+        return get_dvd_jobs(session)
+    except JobException as cie:
+        raise  HTTPException(**cie.__dict__)
 
 @router.get("/jobs/{job_id}/fix_perms")
 async def fix_job_permissions(job_id: int, ):

@@ -368,3 +368,8 @@ class AppriseSchemas(CreateAndUpdateApprise):
 
     class Config:
         orm_mode = True
+
+class UpdatePassword(BaseModel):
+    username: str
+    old_password: str
+    new_password: str

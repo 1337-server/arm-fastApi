@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
 from crud import create_job, get_ripper_settings, update_ui_settings, get_ui_settings, get_apprise_settings, \
-    get_abcde_settings, get_stats, update_ripper_settings, update_apprise_settings
+    get_abcde_settings, get_stats, update_ripper_settings, update_apprise_settings, update_password
 from database import get_db
 from exceptions import JobException
 from schemas import CreateAndUpdateJob, CreateAndUpdateUISettings, UISettingsSchemas, CreateAndUpdateConfig, \
-    CreateAndUpdateRipper, CreateAndUpdateApprise
+    CreateAndUpdateRipper, CreateAndUpdateApprise, UpdatePassword
 from utils.file_system import generate_comments
 
 router = APIRouter()
@@ -20,6 +20,13 @@ router = APIRouter()
 @cbv(router)
 class Settings:
     session: Session = Depends(get_db)
+
+    @router.put("/settings/update_password")
+    def change_admin_password(self, post_json: UpdatePassword):
+        print(post_json)
+        response = update_password(self.session, post_json)
+        return response
+
     # API to get stats of the server
     @router.get("/settings/stats")
     def get_stats_for_server(self):

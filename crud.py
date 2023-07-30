@@ -5,13 +5,14 @@ import random
 import re
 from typing import List
 
+import bcrypt
 import psutil
 import yaml
 from sqlalchemy.orm import Session
 
 #from Routes.utils.utils import check_hw_transcode_support
 from exceptions import JobAlreadyExistError, JobNotFoundError
-from models import Job, Notifications, UISettings, RipperConfig, AppriseConfig
+from models import Job, Notifications, UISettings, RipperConfig, AppriseConfig, User
 from schemas import CreateAndUpdateJob
 import requests
 import json
@@ -138,6 +139,10 @@ def send_job_to_remote_api(session: Session, _id: int):
     return return_dict
 
 
+def get_dvd_jobs(session: Session):
+    job_list = session.query(Job).filter_by(hasnicetitle=True, disctype="dvd").all()
+    return [job.job_id for job in job_list]
+
 def search(session: Session, search_query: str):
     """ Queries ARMui db for the movie/show matching the query"""
     safe_search = re.sub(r'[^a-zA-Z\d]', '', search_query)
@@ -185,6 +190,29 @@ def delete_log(logfile):
 
 
 ################################# Settings ################################################
+
+def update_password(session, post_json):
+    return_json = {'success': False }
+    print(post_json.username, post_json.old_password, post_json.new_password)
+    user = session.query(User).filter_by(username=post_json.username).first()
+    print(user.__dict__)
+    # Old pass/hash still needs encoded from string to bytes
+    password = user.password.encode('utf-8')
+    hashed = user.hash.encode('utf-8')
+    # Hash old password from post hashed to compare with user password from database
+    old_password_hashed = bcrypt.hashpw(post_json.old_password.encode('utf-8'), hashed)
+    if password == old_password_hashed:
+        user.password = bcrypt.hashpw(post_json.new_password.encode('utf-8'), hashed)
+        user.hash = hashed
+        try:
+            session.commit()
+            return_json['success'] = True
+        except Exception as error:
+            return_json['error'] = f"Error in updating password: {error}"
+    else:
+        return_json['error'] = "Password not updated, issue with old password"
+    return return_json
+
 def get_ripper_settings(session) -> RipperConfig:
     ripper_settings = session.query(RipperConfig).first()
     print(ripper_settings)
