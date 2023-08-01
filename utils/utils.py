@@ -169,8 +169,7 @@ def process_audio_logfile(logfile, job, job_results):
                 job.progress = round(percentage(job_stage_index.group(1), job.no_of_titles + 1))
                 job.progress_round = round(job.progress)
             except Exception as error:
-                print("Error processing abcde logfile. Error dump")#,
-                                # f"-  {error}", exc_info=True)
+                print(f"Error processing abcde logfile. Error dump {error}")#,
                 job.stage = "Unknown"
                 job.eta = "Unknown"
                 job.progress = job.progress_round = 0

@@ -14,8 +14,6 @@ from models import SystemInfo
 from schemas import JobSchemas, CreateAndUpdateJob, PaginatedJobList
 from utils.utils import check_hw_transcode_support
 
-#from utils import check_hw_transcode_support
-
 router = APIRouter()
 
 

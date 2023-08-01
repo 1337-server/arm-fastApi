@@ -10,7 +10,6 @@ import psutil
 import yaml
 from sqlalchemy.orm import Session
 
-#from Routes.utils.utils import check_hw_transcode_support
 from exceptions import JobAlreadyExistError, JobNotFoundError
 from models import Job, Notifications, UISettings, RipperConfig, AppriseConfig, User
 from schemas import CreateAndUpdateJob
@@ -112,7 +111,7 @@ def delete_job_info(session: Session, _id: int):
     session.delete(job_info)
     session.commit()
 
-    return
+    return True
 
 
 def send_job_to_remote_api(session: Session, _id: int):
@@ -308,7 +307,6 @@ def get_abcde_settings(session: Session) -> UISettings:
     :param session: Current db session
     :return: The ui settings
     """
-    # TODO Read from file
     return session.query(UISettings).first()
 
 
