@@ -28,11 +28,11 @@ class Jobs:
     def list_active_jobs(self):
         try:
             print("/jobs - list active jobs")
-            server = self.session.query(SystemInfo).filter_by(id="1").first()
+            #server = self.session.query(SystemInfo).filter_by(id="1").first()
             serverutil = ServerUtil()
             return {
                     "results": get_jobs_by_status(self.session, "active"),
-                    'server': server.get_d(), 'serverutil': serverutil.__dict__,
+                    'server': {}, 'serverutil': serverutil.__dict__,
                     'notes':crud_get_notifications(self.session),
                     'hwsupport': check_hw_transcode_support()
             }
