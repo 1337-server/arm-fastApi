@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from crud import crud_get_notifications, crud_read_notification, crud_get_all_notifications
 from database import get_db
 from models import RipperConfig, Notifications, Job
+from utils import DriveUtils
 from utils.utils import search_remote
 
 router = APIRouter()
@@ -80,3 +81,7 @@ def change_job_params(job_id, session: Session = Depends(get_db),
     session.add(notification)
     session.commit()
     return {'message': message, 'form': 'change_job_params', "success": True}
+
+@router.get("/scanfordrives")
+def scan_for_new_drives():
+    DriveUtils.drives_update()

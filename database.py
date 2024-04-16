@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 mysql_user = os.getenv("MYSQL_USER", "root")
 mysql_password = os.getenv("MYSQL_PASSWORD", "example")
-mysql_ip = os.getenv("MYSQL_IP", "127.0.0.1")
+mysql_ip = os.getenv("MYSQL_IP", "192.168.1.127")
 DATABASE_URL = 'mysql+mysqlconnector://' + mysql_user + ':' + mysql_password + '@' + mysql_ip + '/arm'
 
 db_engine = create_engine(DATABASE_URL)

@@ -65,7 +65,7 @@ def process_logfile(logfile, job, job_results):
     print(job.status)
     if job.status == "ripping":
         print("using mkv - " + logfile)
-        job_results = process_makemkv_logfile(job, job_results)
+        job_results = process_makemkv_logfile(job, job_results, session)
     elif job.disctype == "music":
         print("using audio disc")
         process_audio_logfile(job.logfile, job, job_results)
